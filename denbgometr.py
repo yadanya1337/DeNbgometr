@@ -57,7 +57,7 @@ for total_kg in range(MIN_KG, MAX_KG + 1):
         profit_per_item = amazon_price_jpy - cost_per_item
         total_profit = profit_per_item * quantity
         profit_percent = (profit_per_item / amazon_price_jpy * 100.0) if amazon_price_jpy != 0 else 0.0
-        status = "✅ Выгодно" if profit_per_item > 0 else "❌ Не выгодно"
+        status = "✅ Выгодно" if profit_per_item > 0 else "❌ Невыгодно"
     else:
         ship_jpy_per_item = None
         cost_per_item = None
