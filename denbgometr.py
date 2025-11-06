@@ -9,8 +9,8 @@ CNY_TO_JPY = 22.15
 MIN_KG = 1
 MAX_KG = 20
 
-st.set_page_config(page_title="Amazon Profit & Optimal Weight", page_icon="💰", layout="wide")
-st.title("Выгодностеметр!!!!")
+st.set_page_config(page_title="Выгодностеметр", page_icon="💰", layout="wide")
+st.title("💰 Выгодностеметр")
 
 # ---- Sidebar: ввод ----
 st.sidebar.header("Входные параметры")
@@ -27,11 +27,11 @@ st.sidebar.markdown("---")
 st.sidebar.write(f"Курс: **1 CNY = {CNY_TO_JPY} ¥** (жёстко задано)")
 st.sidebar.caption("Программа рассчитывает варианты для партий с общим весом от 1 до 20 кг.")
 
-# ---- Валидация / преобразования ----
+# ---- Преобразования ----
 weight_per_item_kg = weight_per_item_g / 1000.0
 supplier_price_jpy = supplier_price_cny * CNY_TO_JPY
 
-# ---- Функция расчёта тарифа доставки (в CNY) ----
+# ---- Тариф доставки ----
 def shipping_cny_for_kg(k_kg: int, electronic: bool) -> float:
     if k_kg < 1:
         k_kg = 1
@@ -40,7 +40,7 @@ def shipping_cny_for_kg(k_kg: int, electronic: bool) -> float:
     else:
         return 75 + 20 * (k_kg - 1)
 
-# ---- Расчёт таблицы ----
+# ---- Расчёт ----
 rows = []
 for total_kg in range(MIN_KG, MAX_KG + 1):
     if weight_per_item_kg <= 0:
@@ -68,21 +68,21 @@ for total_kg in range(MIN_KG, MAX_KG + 1):
 
     rows.append({
         "Партия, кг": total_kg,
-        "Кол-во шт в партии": quantity,
+        "Кол-во шт": quantity,
         "Доставка (CNY)": ship_cny,
-        "Доставка (¥)": round(ship_jpy, 0),
-        "Доставка на 1 шт (¥)": (round(ship_jpy_per_item, 0) if ship_jpy_per_item is not None else "—"),
-        "Себестоимость 1 шт (¥)": (round(cost_per_item, 0) if cost_per_item is not None else "—"),
-        "Маржа (¥) на 1 шт": (round(profit_per_item, 0) if profit_per_item is not None else "—"),
-        "Маржа %": (round(profit_percent, 2) if profit_percent is not None else "—"),
-        "Общая маржа (¥)": (round(total_profit, 0) if total_profit is not None else "—"),
+        "Доставка (¥)": round(ship_jpy, 2),
+        "Доставка на 1 шт (¥)": round(ship_jpy_per_item, 2) if ship_jpy_per_item else "—",
+        "Себестоимость 1 шт (¥)": round(cost_per_item, 2) if cost_per_item else "—",
+        "Маржа (¥) на 1 шт": round(profit_per_item, 2) if profit_per_item else "—",
+        "Маржа %": round(profit_percent, 2) if profit_percent else "—",
+        "Общая маржа (¥)": round(total_profit, 2) if total_profit else "—",
         "Статус": status
     })
 
 df = pd.DataFrame(rows)
 
 # ---- Оптимальная партия ----
-valid_df = df[df["Кол-во шт в партии"] >= 1].copy()
+valid_df = df[df["Кол-во шт"] >= 1].copy()
 if not valid_df.empty:
     optimal_idx = valid_df["Общая маржа (¥)"].astype(float).idxmax()
     optimal_row = df.loc[optimal_idx]
@@ -90,21 +90,6 @@ if not valid_df.empty:
 else:
     optimal_row = None
     optimal_kg = None
-
-# ---- Отображение ----
-st.markdown("## Вводные данные")
-col1, col2, col3 = st.columns(3)
-with col1:
-    st.write(f"**Цена на Amazon:** {amazon_price_jpy:.0f} ¥")
-    st.write(f"**Комиссия Amazon:** {amazon_fee_jpy:.0f} ¥ (фикс.)")
-with col2:
-    st.write(f"**Цена поставщика:** {supplier_price_cny:.2f} CNY → {supplier_price_jpy:.0f} ¥")
-    st.write(f"**Вес 1 шт:** {weight_per_item_g:.0f} г → {weight_per_item_kg:.3f} кг")
-with col3:
-    st.write(f"**Тип доставки:** {'Электронный (190+40)' if is_electronic else 'Неэлектронный (75+20)'}")
-    st.write(f"**Курс:** 1 CNY = {CNY_TO_JPY} ¥")
-
-st.markdown("---")
 
 # ---- Таблица ----
 def highlight_optimal(row):
@@ -121,9 +106,11 @@ st.markdown("---")
 if optimal_row is not None:
     st.markdown("## ✅ Оптимальный вариант (макс. общая маржа)")
     st.write(f"**Партия:** {optimal_row['Партия, кг']} kg")
-    st.write(f"**Кол-во в партии:** {int(optimal_row['Кол-во шт в партии'])} шт")
-    st.write(f"**Маржа на 1 шт:** {int(optimal_row['Маржа (¥) на 1 шт']):,} ¥")
-    st.write(f"**Общая маржа:** {int(optimal_row['Общая маржа (¥)']):,} ¥")
+    st.write(f"**Количество:** {int(optimal_row['Кол-во шт'])} шт")
+    st.write(f"**Доставка (¥):** {optimal_row['Доставка (¥)']:.2f}")
+    st.write(f"**Себестоимость 1 шт (¥):** {optimal_row['Себестоимость 1 шт (¥)']:.2f}")
+    st.write(f"**Маржа на 1 шт (¥):** {optimal_row['Маржа (¥) на 1 шт']:.2f}")
+    st.write(f"**Общая маржа (¥):** {optimal_row['Общая маржа (¥)']:.2f}")
 else:
     st.info("Ни в одной партии не удалось разместить хотя бы одну единицу товара.")
 
@@ -138,4 +125,3 @@ st.download_button(
     file_name="amazon_profit_by_weight.csv",
     mime="text/csv"
 )
-
