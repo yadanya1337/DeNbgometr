@@ -10,7 +10,7 @@ MIN_KG = 1
 MAX_KG = 20
 
 st.set_page_config(page_title="Amazon Profit & Optimal Weight", page_icon="💰", layout="wide")
-st.title("💰 Калькулятор выгодности товара (Amazon Japan)")
+st.title("Выгодностеметр!!!!")
 
 # ---- Sidebar: ввод ----
 st.sidebar.header("Входные параметры")
@@ -138,3 +138,4 @@ st.download_button(
     file_name="amazon_profit_by_weight.csv",
     mime="text/csv"
 )
+
